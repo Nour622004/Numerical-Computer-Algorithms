@@ -10,4 +10,5 @@
 *.so
 *.dylib
 *.class
+.vscode/
 secant_method

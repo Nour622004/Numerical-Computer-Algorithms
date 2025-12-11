@@ -2,22 +2,25 @@
 #include <cmath>
 #include <iomanip> // For table formatting (setw, setprecision, fixed)
 #include <limits>  // For numeric_limits
+#include <string>
 #include "libs/Tokenizer.hpp"
 
 using namespace std;
 
-// Global MathParser instance and expression string
-MathParser parser;
-string global_expression;
+// Global parser and function expression string
+MathParser g_parser;
+std::string g_funcExpr;
 
 /**
- * @brief Calculates the value of the user-defined function f(x).
+ * @brief Calculates the value of the user-defined function f(x) provided as a string.
+ *        Supported operations in the current parser: +, -, *, /, ^, parentheses, sin(), cos().
+ *        Use variable name x (case-insensitive letters are treated as variable).
  * @param x The input value for the function.
  * @return The result of f(x).
  */
 double calculate_fx(double x)
 {
-    return parser.evaluate(global_expression, x);
+    return g_parser.evaluate(g_funcExpr, x);
 }
 
 /**
@@ -47,14 +50,13 @@ int main()
     // Set output precision and fixed notation
     cout << fixed << setprecision(6);
 
-    // --- 1. User Inputs Function Expression ---
-    cout << "### Secant Method Solver ###" << endl;
-    cout << "Enter your function f(x):" << endl;
-    cout << "Supported: +, -, *, /, ^, sin(), cos(), and variable 'x'" << endl;
-    cout << "Example: x^2 + 3*x - 5  or  sin(x) - x/2" << endl;
-    cout << "\nf(x) = ";
-    cin.ignore(); // Clear any newline from previous input
-    getline(cin, global_expression);
+    // --- 1. User Inputs Function as a String ---
+    cout << "### Secant Method Solver (f(x) as an expression) ###" << endl;
+    cout << "Enter your function f(x) using 'x' as the variable" << endl;
+    cout << "Allowed: + - * / ^, parentheses, sin(), cos()" << endl;
+    cout << "Example: 3*x^2 - 2*x + 5 or sin(x) - 0.5" << endl;
+    cout << "f(x) = ";
+    std::getline(cin >> std::ws, g_funcExpr);
 
     // --- 2. User Inputs Initial Estimates and Stopping Criteria ---
     double x1, x2, epsilon = 0.0;
@@ -62,7 +64,7 @@ int main()
     int choice;
     int iteration = 0;
 
-    cout << "\nYour function is: f(x) = " << global_expression << endl;
+    cout << "\nYour function is: f(x) = " << g_funcExpr << endl;
     cout << "---" << endl;
 
     cout << "Enter initial estimate x1: ";
@@ -125,8 +127,14 @@ int main()
 
     while ((choice == 1 && iteration < max_iterations) || (choice == 2 && error > epsilon && iteration < max_iterations))
     {
-        double fx1 = calculate_fx(x1);
-        double fx2 = calculate_fx(x2);
+        double fx1, fx2;
+        try {
+            fx1 = calculate_fx(x1);
+            fx2 = calculate_fx(x2);
+        } catch (const std::exception& e) {
+            cerr << "Error while evaluating f(x): " << e.what() << endl;
+            return 1;
+        }
 
         x3 = secant_method_next_x(x1, x2);
 
@@ -138,7 +146,12 @@ int main()
         }
 
         // Calculate f(x3) and the relative approximate error
-        fx3 = calculate_fx(x3);
+        try {
+            fx3 = calculate_fx(x3);
+        } catch (const std::exception& e) {
+            cerr << "Error while evaluating f(x3): " << e.what() << endl;
+            return 1;
+        }
         error = fabs((x3 - x2) / x3);
 
         // Print the row

@@ -16,6 +16,27 @@ bool MathParser::isDigit(char c){ return std::isdigit(c) || c == '.'; }
 std::vector<MathParser::Token> MathParser::tokenize(const std::string& expr) {
     std::vector<Token> tokens;
 
+    // Helper to push a token with implicit multiplication insertion when needed
+    auto pushToken = [&](const Token& t){
+        if (!tokens.empty()) {
+            const Token& prev = tokens.back();
+            bool prevCanMultiply = (prev.type == NUMBER || prev.type == VARIABLE || prev.type == RPAREN);
+            bool currCanMultiply = (t.type == NUMBER || t.type == VARIABLE || t.type == FUNCTION || t.type == LPAREN);
+            bool isFunctionCall = (prev.type == FUNCTION && t.type == LPAREN); // sin( ... )
+
+            // Insert implicit multiplication for patterns like: 2x, x2, 2(x+1), x(x+1), (x+1)2, (x+1)x, 2sin(x), xsin(x)
+            if (prevCanMultiply && currCanMultiply) {
+                tokens.push_back({OPERATOR, "*"});
+            }
+
+            // Do NOT insert between FUNCTION and LPAREN (that is a function call)
+            if (isFunctionCall) {
+                // No op; the function token followed by '(' is handled naturally
+            }
+        }
+        tokens.push_back(t);
+    };
+
     for (size_t i = 0; i < expr.size();) {
         char c = expr[i];
 
@@ -25,7 +46,7 @@ std::vector<MathParser::Token> MathParser::tokenize(const std::string& expr) {
             std::string num;
             while (i < expr.size() && isDigit(expr[i]))
                 num += expr[i++];
-            tokens.push_back({NUMBER, num});
+            pushToken({NUMBER, num});
             continue;
         }
 
@@ -35,17 +56,17 @@ std::vector<MathParser::Token> MathParser::tokenize(const std::string& expr) {
                 name += expr[i++];
 
             if (name == "sin" || name == "cos")
-                tokens.push_back({FUNCTION, name});
+                pushToken({FUNCTION, name});
             else
-                tokens.push_back({VARIABLE, name});
+                pushToken({VARIABLE, name});
             continue;
         }
 
-        if (c == '(') { tokens.push_back({LPAREN, "("}); i++; continue; }
-        if (c == ')') { tokens.push_back({RPAREN, ")"}); i++; continue; }
+        if (c == '(') { pushToken({LPAREN, "("}); i++; continue; }
+        if (c == ')') { pushToken({RPAREN, ")"}); i++; continue; }
 
         if (std::string("+-*/^").find(c) != std::string::npos) {
-            tokens.push_back({OPERATOR, std::string(1, c)});
+            pushToken({OPERATOR, std::string(1, c)});
             i++;
             continue;
         }
