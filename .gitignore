@@ -1,0 +1,13 @@
+*.elf
+*.o
+*.out
+*.exe
+*.gch
+*.obj
+*.pch
+*.lib
+*.dll
+*.so
+*.dylib
+*.class
+secant_method

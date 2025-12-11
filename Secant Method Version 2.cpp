@@ -2,20 +2,22 @@
 #include <cmath>
 #include <iomanip> // For table formatting (setw, setprecision, fixed)
 #include <limits>  // For numeric_limits
+#include "libs/Tokenizer.hpp"
 
 using namespace std;
 
-// Global variables to store the coefficients of the quadratic function (ax^2 + bx + c)
-double global_a, global_b, global_c;
+// Global MathParser instance and expression string
+MathParser parser;
+string global_expression;
 
 /**
- * @brief Calculates the value of the user-defined quadratic function f(x) = ax^2 + bx + c.
+ * @brief Calculates the value of the user-defined function f(x).
  * @param x The input value for the function.
  * @return The result of f(x).
  */
 double calculate_fx(double x)
 {
-    return global_a * pow(x, 2) + global_b * x + global_c;
+    return parser.evaluate(global_expression, x);
 }
 
 /**
@@ -45,18 +47,14 @@ int main()
     // Set output precision and fixed notation
     cout << fixed << setprecision(6);
 
-    // --- 1. User Inputs Function Coefficients ---
-    cout << "### Secant Method Solver (ax^2 + bx + c) ###" << endl;
-    cout << "Please Enter The Coefficients For Your Function" << endl;
-
-    cout << "Enter coefficient 'a': ";
-    cin >> global_a;
-
-    cout << "Enter coefficient 'b': ";
-    cin >> global_b;
-
-    cout << "Enter constant 'c': ";
-    cin >> global_c;
+    // --- 1. User Inputs Function Expression ---
+    cout << "### Secant Method Solver ###" << endl;
+    cout << "Enter your function f(x):" << endl;
+    cout << "Supported: +, -, *, /, ^, sin(), cos(), and variable 'x'" << endl;
+    cout << "Example: x^2 + 3*x - 5  or  sin(x) - x/2" << endl;
+    cout << "\nf(x) = ";
+    cin.ignore(); // Clear any newline from previous input
+    getline(cin, global_expression);
 
     // --- 2. User Inputs Initial Estimates and Stopping Criteria ---
     double x1, x2, epsilon = 0.0;
@@ -64,7 +62,7 @@ int main()
     int choice;
     int iteration = 0;
 
-    cout << "\nYour function is: f(x) = " << global_a << "x^2 + " << global_b << "x + " << global_c << endl;
+    cout << "\nYour function is: f(x) = " << global_expression << endl;
     cout << "---" << endl;
 
     cout << "Enter initial estimate x1: ";
