@@ -168,6 +168,12 @@ double MathParser::evalRPN(const std::vector<Token>& rpn, double xValue) {
 
             if (t.value == "sin") st.push(std::sin(a));
             else if (t.value == "cos") st.push(std::cos(a));
+            else if(t.value == "tan") st.push(std::tan(a));
+            else if(t.value == "exp") st.push(std::exp(a));
+            else if(t.value == "log") st.push(std::log(a));
+            else {
+                throw std::runtime_error("Unknown function: " + t.value);
+            }
         }
     }
 
